@@ -2,6 +2,11 @@
 <html>
     <head>
         <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+        <style>
+            #faites > p {
+                text-decoration: line-through;
+            }
+        </style>
     </head>
     <body>
         <form id="formulaire">
@@ -12,22 +17,52 @@
         <div id="faites">
         </div>
         <script>
-            var myDataRef = new Firebase('https://fiessingertodolist.firebaseio.com/');
+            var afaire = document.getElementById('afaire');
+            var faites = document.getElementById('faites');
+            var dbUrl = 'https://louis-to-do-list.firebaseio.com/'; 
+            var myDataRef = new Firebase(dbUrl);
             document.getElementById('formulaire').onsubmit = function(evt) {
                 evt.preventDefault();
-                console.log(document.getElementById('saisie').value);
                 myDataRef.push({
                     name: document.getElementById('saisie').value,
-                    done: false
+                    done: false 
                 });
             };
             myDataRef.on('child_added', function(snapshot) {
-                var message = snapshot.val();
-                console.log(snapshot.key(), message.name);
-                var afaire = document.getElementById('afaire');
-                afaire.innerHTML = afaire.innerHTML + '<p>' + message.name + '</p>'; 
-            });            
+                var tache = snapshot.val();
+                var idTache = snapshot.key(); 
+                var dbTache = new Firebase(dbUrl + '/' + idTache); 
+                var el = document.createElement('p');
+                el.setAttribute('id', idTache);
+                var checkbox = document.createElement('input');
+                checkbox.setAttribute('type', 'checkbox');
+                checkbox.onchange = function() {
+                    dbTache.update({ done: this.checked }); 
+                };
+                el.appendChild(checkbox);
+                el.appendChild(document.createTextNode(tache.name));
+                var bouton = document.createElement('button');
+                bouton.appendChild(document.createTextNode('suppr'));
+                el.appendChild(bouton);
+                bouton.onclick = function() {
+                    dbTache.remove();
+                    el.parentNode.removeChild(el);
+                };
+                if (tache.done) {
+                    faites.appendChild(el);
+                } else {
+                    afaire.appendChild(el);
+                }
+            });
+            myDataRef.on('child_changed', function(snapshot) {
+                var el = document.getElementById(snapshot.key());
+                if (snapshot.val().done) {
+                    faites.appendChild(el);
+                } else {
+                    afaire.appendChild(el);
+                }
+            });
         </script>
     </body>
-</html> 
-View
+</html>
+view
